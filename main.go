@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/csv"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -22,10 +22,9 @@ type CSVRecord struct {
 
 func main() {
 
-	// Create a custom transport that skips TLS verification
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	config := getConfig()
+	fmt.Println(config)
+	client := RecoverClient()
 
 	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
 	apiURL := flag.String("url", "", "API endpoint")
@@ -75,14 +74,13 @@ func main() {
 
 		requestUrl := *apiURL
 
-		req, err := http.NewRequest("POST", requestUrl, bytes.NewBufferString(record.JSONPayload))
+		req, err := http.NewRequest(http.MethodGet, requestUrl, bytes.NewBufferString(record.JSONPayload))
 		if err != nil {
 			fmt.Println("Error creating request:", err)
 			continue
 		}
 
 		req.Header.Add("Content-Type", "application/json")
-		client := &http.Client{Transport: tr}
 
 		if *dryRun {
 			println("Dry run, skipping request")
@@ -198,4 +196,16 @@ func removeBOM(content []byte) []byte {
 		return content[3:]
 	}
 	return content
+}
+
+func getConfig() *Config {
+	config := Config{}
+	file, err := os.ReadFile("config.json")
+
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		fmt.Println("Error reading config file:", err)
+		return &Config{}
+	}
+	return &config
 }

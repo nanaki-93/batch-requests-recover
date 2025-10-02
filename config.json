@@ -1,8 +1,14 @@
 {
-  "api_endpoint": "",
-  "method": "",
-  "headers": {},
-  "csv_columns": [],
-  "has_body": false,
-  "body_column": ""
+  "api_endpoint": "https://localhost.com/v1/endpoint",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "csv_columns": [
+    {
+      "name": "cf",
+      "type": "path"
+    }
+  ],
+  "has_body": true
 }
