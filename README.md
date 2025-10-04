@@ -6,6 +6,6 @@ JSON file configuration:
 5- has body, boolean value
 6- last column is the body, if any
 7- configuration of csv file
-8- csv delimiter
-9- csv quotechar
-10- csv escapechar
+    a- csv delimiter
+    b- csv quotechar
+    c- csv escapechar

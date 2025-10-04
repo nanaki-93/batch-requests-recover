@@ -20,10 +20,9 @@ func main() {
 	fmt.Println(config)
 	client := RecoverClient()
 
-	csvFilePath, apiURL, dryRun, sleep := checkArgs()
+	csvFilePath, dryRun, sleep := checkArgs()
 
 	fmt.Printf("Processing inputFile: %s\n", *csvFilePath)
-	fmt.Printf("Sending to: %s\n", *apiURL)
 
 	inputFile, err := os.Open(*csvFilePath)
 	if err != nil {
@@ -53,11 +52,12 @@ func main() {
 
 		if *dryRun {
 			println("Dry run, skipping request")
-			println("Request URL: ", record)
+			println("Request URL: ", record.URL.String())
+			println("Request Method: ", record.Method)
 			println("--- End Request ---")
 
 		} else {
-			resp, err := client.Do(record)
+			resp, err := client.Do(&record)
 			if err != nil {
 				fmt.Println("Error making request:", err)
 				continue
@@ -93,34 +93,38 @@ func main() {
 	if err != nil {
 		fmt.Println("Error writing response file:", err)
 	}
+
 	fmt.Println("Done")
 }
 
-func checkArgs() (*string, *string, *bool, *int) {
+func checkArgs() (*string, *bool, *int) {
 	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
-	apiURL := flag.String("url", "", "API endpoint")
 	//todo change it to prod -> defaultValue := false
 	dryRun := flag.Bool("dry", true, "Dry run")
 	sleep := flag.Int("sleep", 1, "Sleep seconds between requests")
 
 	flag.Parse()
 
-	if *csvFilePath == "" || *apiURL == "" {
-		println(" inputFile and url are required")
+	if *csvFilePath == "" {
+		println(" inputFile is required")
 		os.Exit(1)
 	}
-	return csvFilePath, apiURL, dryRun, sleep
+	return csvFilePath, dryRun, sleep
 }
 
 // parseCSV parses the CSV file with tab separator and removes single quotes
-func parseCSV(file io.Reader, config *Config) ([]*http.Request, error) {
+func parseCSV(file io.Reader, config *Config) ([]http.Request, error) {
 
 	reader := csv.NewReader(file)
 	reader.Comma = '\t'            // Tab separator
 	reader.LazyQuotes = true       // Allow lazy quotes
 	reader.TrimLeadingSpace = true // Trim leading space
 
-	var records []*http.Request
+	var records []http.Request
+	totalColumns := len(config.PathVars) + len(config.QueryVars)
+	if config.HasBody {
+		totalColumns++
+	}
 
 	for {
 		row, err := reader.Read()
@@ -136,19 +140,44 @@ func parseCSV(file io.Reader, config *Config) ([]*http.Request, error) {
 			continue
 		}
 
-		req := http.Request{}
-
-		req.Method = config.Method
 		reqUrl := config.ApiEndpoint
+
+		for j := 0; j < len(config.PathVars); j++ {
+			if j >= totalColumns {
+				fmt.Println("Too many columns in the csv:", row)
+				break
+			}
+			if j < len(config.PathVars) {
+				reqUrl += "/" + trimQuotes(row[j])
+			}
+		}
+
+		if len(config.QueryVars) > 0 {
+			reqUrl += "?"
+		}
+		for j := 0; j < len(config.QueryVars); j++ {
+			if (j + len(config.PathVars)) >= totalColumns {
+				fmt.Println("Too many columns in the csv:", row)
+				break
+			}
+			reqUrl += trimQuotes(config.QueryVars[j]) + "=" + trimQuotes(row[j+len(config.PathVars)]) + "&"
+		}
+		reqUrl = strings.TrimSuffix(reqUrl, "&")
+		var body io.Reader = nil
+		if config.HasBody {
+			body = bytes.NewBuffer([]byte(row[len(config.PathVars)+len(config.QueryVars)]))
+		}
+
+		request, err := http.NewRequest(config.Method, reqUrl, body)
+		if err != nil {
+			fmt.Printf("error creating request: %s", err)
+			continue
+		}
 		for header, value := range config.Headers {
-			req.Header.Add(header, value)
+			request.Header.Add(header, value)
 		}
 
-		for _, pathVar := range config.PathVars {
-			reqUrl += "/" + trimQuotes(pathVar)
-		}
-		req.URL.Path = reqUrl
-
+		records = append(records, *request)
 	}
 
 	return records, nil
@@ -180,6 +209,7 @@ func getConfig() *Config {
 	file, err := os.ReadFile("config.json")
 
 	err = json.Unmarshal(file, &config)
+	fmt.Println("config:", config)
 	if err != nil {
 		fmt.Println("Error reading config file:", err)
 		return &Config{}

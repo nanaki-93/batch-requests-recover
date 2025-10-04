@@ -4,17 +4,7 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "path_vars": [
-    {
-      "name": "cf",
-      "type": "path"
-    }
-  ],
-  "query_vars": [
-    {
-      "name": "cf",
-      "type": "path"
-    }
-  ],
+  "path_vars": ["cf"],
+  "query_vars": ["age", "sex"],
   "has_body": true
 }
