@@ -4,7 +4,13 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "csv_columns": [
+  "path_vars": [
+    {
+      "name": "cf",
+      "type": "path"
+    }
+  ],
+  "query_vars": [
     {
       "name": "cf",
       "type": "path"

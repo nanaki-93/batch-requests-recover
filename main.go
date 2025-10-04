@@ -14,29 +14,13 @@ import (
 	"time"
 )
 
-// CSVRecord represents a row from the CSV file
-type CSVRecord struct {
-	JSONPayload   string
-	OptionalField string
-}
-
 func main() {
 
 	config := getConfig()
 	fmt.Println(config)
 	client := RecoverClient()
 
-	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
-	apiURL := flag.String("url", "", "API endpoint")
-	dryRun := flag.Bool("dry", false, "Dry run")
-	sleep := flag.Int("sleep", 1, "Sleep seconds between requests")
-
-	flag.Parse()
-
-	if *csvFilePath == "" || *apiURL == "" {
-		println(" inputFile and url are required")
-		os.Exit(1)
-	}
+	csvFilePath, apiURL, dryRun, sleep := checkArgs()
 
 	fmt.Printf("Processing inputFile: %s\n", *csvFilePath)
 	fmt.Printf("Sending to: %s\n", *apiURL)
@@ -58,42 +42,22 @@ func main() {
 	content = removeBOM(content)
 
 	// Parse CSV records
-	records, err := parseCSV(bytes.NewReader(content))
+	records, err := parseCSV(bytes.NewReader(content), config)
 	if err != nil {
 		fmt.Println("Error reading CSV:", err)
 		return
 	}
 	respList := make([]string, 0, len(records))
-	errList := make([]string, 0, 0)
+	errList := make([]string, 0)
 	for i, record := range records {
-
-		fmt.Printf("\n--- Request %d ---\n", i+1)
-		payloadPreview := record.JSONPayload[0:100]
-		fmt.Printf("JSON Payload: %s\n", payloadPreview)
-		fmt.Printf("Optional Field: %s\n", record.OptionalField)
-
-		requestUrl := *apiURL
-
-		req, err := http.NewRequest(http.MethodGet, requestUrl, bytes.NewBufferString(record.JSONPayload))
-		if err != nil {
-			fmt.Println("Error creating request:", err)
-			continue
-		}
-
-		req.Header.Add("Content-Type", "application/json")
 
 		if *dryRun {
 			println("Dry run, skipping request")
-			println("Request URL: ", requestUrl)
-			println("Request Body: ", payloadPreview)
+			println("Request URL: ", record)
 			println("--- End Request ---")
-			if (i % 10) != 0 {
-				respList = append(respList, fmt.Sprint(strconv.Itoa(i)+"-"+"200 - "+payloadPreview))
-			} else {
-				errList = append(errList, fmt.Sprint(strconv.Itoa(i)+"-"+"500 - "+payloadPreview))
-			}
+
 		} else {
-			resp, err := client.Do(req)
+			resp, err := client.Do(record)
 			if err != nil {
 				fmt.Println("Error making request:", err)
 				continue
@@ -132,15 +96,31 @@ func main() {
 	fmt.Println("Done")
 }
 
+func checkArgs() (*string, *string, *bool, *int) {
+	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
+	apiURL := flag.String("url", "", "API endpoint")
+	//todo change it to prod -> defaultValue := false
+	dryRun := flag.Bool("dry", true, "Dry run")
+	sleep := flag.Int("sleep", 1, "Sleep seconds between requests")
+
+	flag.Parse()
+
+	if *csvFilePath == "" || *apiURL == "" {
+		println(" inputFile and url are required")
+		os.Exit(1)
+	}
+	return csvFilePath, apiURL, dryRun, sleep
+}
+
 // parseCSV parses the CSV file with tab separator and removes single quotes
-func parseCSV(file io.Reader) ([]CSVRecord, error) {
+func parseCSV(file io.Reader, config *Config) ([]*http.Request, error) {
 
 	reader := csv.NewReader(file)
 	reader.Comma = '\t'            // Tab separator
 	reader.LazyQuotes = true       // Allow lazy quotes
 	reader.TrimLeadingSpace = true // Trim leading space
 
-	var records []CSVRecord
+	var records []*http.Request
 
 	for {
 		row, err := reader.Read()
@@ -156,22 +136,19 @@ func parseCSV(file io.Reader) ([]CSVRecord, error) {
 			continue
 		}
 
-		record := CSVRecord{}
+		req := http.Request{}
 
-		// First column (mandatory): JSON payload
-		if len(row) > 0 {
-			record.JSONPayload = trimQuotes(row[0])
+		req.Method = config.Method
+		reqUrl := config.ApiEndpoint
+		for header, value := range config.Headers {
+			req.Header.Add(header, value)
 		}
 
-		// Second column (optional): string field
-		if len(row) > 1 {
-			record.OptionalField = trimQuotes(row[1])
+		for _, pathVar := range config.PathVars {
+			reqUrl += "/" + trimQuotes(pathVar)
 		}
+		req.URL.Path = reqUrl
 
-		// Only add if JSON payload is not empty
-		if record.JSONPayload != "" {
-			records = append(records, record)
-		}
 	}
 
 	return records, nil
