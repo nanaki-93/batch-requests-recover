@@ -11,7 +11,7 @@ import (
 )
 
 func Run() {
-	args := checkArgs()
+	args := checkAndParseArgs()
 
 	config := loadConfig(args.ConfigFilePath)
 
@@ -27,23 +27,10 @@ func Run() {
 		return
 	}
 
-	respList := make([]string, 0, len(records))
-	errList := make([]string, 0)
-	for i, record := range records {
-
-		responseMsg, err := processService.ProcessRecord(record, i)
-		if err != nil {
-			fmt.Println("Error making request:", err)
-			return
-		}
-
-		if responseMsg.Type == model.SUCCESS {
-			respList = append(respList, responseMsg.Message)
-		} else {
-			errList = append(errList, responseMsg.Message)
-		}
-
-		util.DelayFor(args.SleepSeconds)
+	respList, errList, err := processService.ProcessAll(records)
+	if err != nil {
+		fmt.Println("Error processing records:", err)
+		return
 	}
 
 	util.WriteResponses(args.CSVFilePath, errList, ".err")
@@ -51,7 +38,7 @@ func Run() {
 
 }
 
-func checkArgs() *model.CommandLineArgs {
+func checkAndParseArgs() *model.CommandLineArgs {
 	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
 	configFilePath := flag.String("configPath", "config.json", "Path to config file, default is config.json")
 	dryRun := flag.Bool("dry", true, "Dry run")

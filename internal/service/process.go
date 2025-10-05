@@ -2,6 +2,7 @@ package service
 
 import (
 	"batchRequestsRecover/internal/model"
+	"batchRequestsRecover/internal/util"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -22,7 +23,28 @@ func NewProcessService(config model.Config, args model.CommandLineArgs) *Process
 	return &ProcessService{config: config, args: args, httpService: createHttpService(config, args)}
 }
 
-func (s *ProcessService) ProcessRecord(record http.Request, index int) (res model.Response, err error) {
+func (s *ProcessService) ProcessAll(records []http.Request) ([]string, []string, error) {
+	respList := make([]string, 0, len(records))
+	errList := make([]string, 0)
+	for i, record := range records {
+
+		responseMsg, err := s.processRecord(record, i)
+		if err != nil {
+			return respList, errList, fmt.Errorf("error processing record: %w", err)
+		}
+
+		if responseMsg.Type == model.SUCCESS {
+			respList = append(respList, responseMsg.Message)
+		} else {
+			errList = append(errList, responseMsg.Message)
+		}
+
+		util.DelayFor(s.args.SleepSeconds)
+	}
+	return respList, errList, nil
+}
+
+func (s *ProcessService) processRecord(record http.Request, index int) (res model.Response, err error) {
 
 	response, status, err := s.httpService.call(record)
 	if err != nil {
