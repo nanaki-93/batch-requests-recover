@@ -115,12 +115,10 @@ func checkArgs() (*string, *bool, *int) {
 // parseCSV parses the CSV file with tab separator and removes single quotes
 func parseCSV(file io.Reader, config *Config) ([]http.Request, error) {
 
-	reader := csv.NewReader(file)
-	reader.Comma = '\t'            // Tab separator
-	reader.LazyQuotes = true       // Allow lazy quotes
-	reader.TrimLeadingSpace = true // Trim leading space
+	reader := getCsvReader(file, config)
 
 	var records []http.Request
+
 	totalColumns := len(config.PathVars) + len(config.QueryVars)
 	if config.HasBody {
 		totalColumns++
@@ -142,45 +140,77 @@ func parseCSV(file io.Reader, config *Config) ([]http.Request, error) {
 
 		reqUrl := config.ApiEndpoint
 
-		for j := 0; j < len(config.PathVars); j++ {
-			if j >= totalColumns {
-				fmt.Println("Too many columns in the csv:", row)
-				break
-			}
-			if j < len(config.PathVars) {
-				reqUrl += "/" + trimQuotes(row[j])
-			}
-		}
+		reqUrl = processPathVars(config, totalColumns, row, reqUrl)
 
-		if len(config.QueryVars) > 0 {
-			reqUrl += "?"
-		}
-		for j := 0; j < len(config.QueryVars); j++ {
-			if (j + len(config.PathVars)) >= totalColumns {
-				fmt.Println("Too many columns in the csv:", row)
-				break
-			}
-			reqUrl += trimQuotes(config.QueryVars[j]) + "=" + trimQuotes(row[j+len(config.PathVars)]) + "&"
-		}
-		reqUrl = strings.TrimSuffix(reqUrl, "&")
+		reqUrl = processQueryVars(config, reqUrl, totalColumns, row)
+
 		var body io.Reader = nil
 		if config.HasBody {
 			body = bytes.NewBuffer([]byte(row[len(config.PathVars)+len(config.QueryVars)]))
 		}
 
-		request, err := http.NewRequest(config.Method, reqUrl, body)
-		if err != nil {
-			fmt.Printf("error creating request: %s", err)
-			continue
-		}
-		for header, value := range config.Headers {
-			request.Header.Add(header, value)
+		request, err2 := createRequest(err, config, reqUrl, body)
+		if err2 != nil {
+			return nil, err2
 		}
 
 		records = append(records, *request)
 	}
 
 	return records, nil
+}
+
+func createRequest(err error, config *Config, reqUrl string, body io.Reader) (*http.Request, error) {
+	request, err := http.NewRequest(config.Method, reqUrl, body)
+	if err != nil {
+		fmt.Printf("error creating request: %s", err)
+		return nil, err
+	}
+	for header, value := range config.Headers {
+		request.Header.Add(header, value)
+	}
+	return request, nil
+}
+
+func processQueryVars(config *Config, reqUrl string, totalColumns int, row []string) string {
+	if len(config.QueryVars) > 0 {
+		reqUrl += "?"
+	}
+	for j := 0; j < len(config.QueryVars); j++ {
+		if (j + len(config.PathVars)) >= totalColumns {
+			fmt.Println("Too many columns in the csv:", row)
+			break
+		}
+		reqUrl += trimQuotes(config.QueryVars[j]) + "=" + trimQuotes(row[j+len(config.PathVars)]) + "&"
+	}
+	reqUrl = strings.TrimSuffix(reqUrl, "&")
+	return reqUrl
+}
+
+func processPathVars(config *Config, totalColumns int, row []string, reqUrl string) string {
+	for j := 0; j < len(config.PathVars); j++ {
+		if j >= totalColumns {
+			fmt.Println("Too many columns in the csv:", row)
+			break
+		}
+		if j < len(config.PathVars) {
+			reqUrl += "/" + trimQuotes(row[j])
+		}
+	}
+	return reqUrl
+}
+
+func getCsvReader(file io.Reader, config *Config) *csv.Reader {
+	reader := csv.NewReader(file)
+	// Set delimiter (default to tab if not specified)
+	if config.CSVDelimiter != "" && len(config.CSVDelimiter) > 0 {
+		reader.Comma = rune(config.CSVDelimiter[0])
+	} else {
+		reader.Comma = '\t' // Tab separator
+	}
+	reader.LazyQuotes = true       // Allow lazy quotes
+	reader.TrimLeadingSpace = true // Trim leading space
+	return reader
 }
 
 // trimQuotes removes surrounding single quotes and trims whitespace

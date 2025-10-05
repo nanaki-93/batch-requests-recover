@@ -11,10 +11,13 @@ package main
 // The first n columns are the PathVars, the next n columns are the QueryVars,
 // and the last column is the body, if the request has a body (hasBody = true).
 type Config struct {
-	ApiEndpoint string            `json:"api_endpoint"`
-	Method      string            `json:"method"`
-	Headers     map[string]string `json:"headers"`
-	PathVars    []string          `json:"path_vars"`
-	QueryVars   []string          `json:"query_vars"`
-	HasBody     bool              `json:"has_body"`
+	ApiEndpoint   string            `json:"api_endpoint"`
+	Method        string            `json:"method"`
+	Headers       map[string]string `json:"headers"`
+	PathVars      []string          `json:"path_vars"`
+	QueryVars     []string          `json:"query_vars"`
+	HasBody       bool              `json:"has_body"`
+	CSVDelimiter  string            `json:"csv_delimiter"`
+	CSVQuoteChar  string            `json:"csv_quote_char"`
+	CSVEscapeChar string            `json:"csv_escape_char"`
 }
