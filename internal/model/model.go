@@ -108,7 +108,13 @@ func (conf *Config) GetTotalColumns() int {
 	return totalColumns
 }
 
-func (conf *Config) GetPathVars(row []string) string {
+func (conf *Config) GetPathVars(row []string) (string, error) {
+	if len(conf.PathVars) == 0 {
+		return "", nil
+	}
+	if len(row) < len(conf.PathVars) {
+		return "", fmt.Errorf("not enough columns in the csv")
+	}
 	var urlBuilder strings.Builder
 
 	columnsToProcess := min(len(conf.PathVars), conf.GetTotalColumns())
@@ -119,16 +125,19 @@ func (conf *Config) GetPathVars(row []string) string {
 	}
 
 	if len(conf.PathVars) > conf.GetTotalColumns() {
-		fmt.Println("Too many columns in the csv:", row)
+		return "", fmt.Errorf("too many columns in the csv: %v", row)
 	}
 
-	return urlBuilder.String()
+	return urlBuilder.String(), nil
 }
 
-func (conf *Config) GetQueryVars(row []string) string {
+func (conf *Config) GetQueryVars(row []string) (string, error) {
 
 	if len(conf.QueryVars) == 0 {
-		return ""
+		return "", nil
+	}
+	if len(row) < conf.GetTotalColumns() {
+		return "", fmt.Errorf("not enough columns in the csv")
 	}
 
 	var urlBuilder strings.Builder
@@ -151,5 +160,5 @@ func (conf *Config) GetQueryVars(row []string) string {
 		urlBuilder.WriteString(util.TrimQuotes(row[columnIndex]))
 	}
 
-	return urlBuilder.String()
+	return urlBuilder.String(), nil
 }

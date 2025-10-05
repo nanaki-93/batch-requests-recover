@@ -23,6 +23,7 @@ func TrimQuotes(s string) string {
 
 	// Remove single quotes from both ends
 	s = strings.Trim(s, "'")
+	s = strings.Trim(s, "\"")
 
 	// Trim whitespace again after removing quotes
 	return strings.TrimSpace(s)
