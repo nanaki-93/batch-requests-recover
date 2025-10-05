@@ -10,6 +10,9 @@ import (
 	"os"
 )
 
+// osExit is a variable to allow mocking in tests
+var osExit = os.Exit
+
 func Run() {
 	args := checkAndParseArgs()
 
@@ -48,7 +51,7 @@ func checkAndParseArgs() *model.CommandLineArgs {
 
 	if *csvFilePath == "" {
 		println(" inputFile is required")
-		os.Exit(1)
+		osExit(1)
 	}
 	return &model.CommandLineArgs{
 		CSVFilePath:    *csvFilePath,
