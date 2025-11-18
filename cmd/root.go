@@ -45,7 +45,7 @@ func checkAndParseArgs() *model.CommandLineArgs {
 	csvFilePath := flag.String("inputFile", "", "Path to CSV inputFile")
 	configFilePath := flag.String("configPath", "config.json", "Path to config file, default is config.json")
 	dryRun := flag.Bool("dry", true, "Dry run")
-	sleep := flag.Int("sleep", 1, "Sleep seconds between requests")
+	sleep := flag.Int("sleep", 1000, "Sleep milli seconds between requests")
 
 	flag.Parse()
 

@@ -140,7 +140,7 @@ func TestParserService_createRequest(t *testing.T) {
 		{
 			name: "Simple GET request without body",
 			config: model.Config{
-				ApiEndpoint: "https://api.example.com",
+				ApiEndpoint: "https://api.example.com/{userId}",
 				Method:      "GET",
 				PathVars:    []string{"userId"},
 				QueryVars:   []string{"status"},
@@ -153,7 +153,7 @@ func TestParserService_createRequest(t *testing.T) {
 		{
 			name: "POST request with body",
 			config: model.Config{
-				ApiEndpoint: "https://api.example.com",
+				ApiEndpoint: "https://api.example.com/{userId}",
 				Method:      "POST",
 				PathVars:    []string{"userId"},
 				QueryVars:   []string{},
@@ -166,7 +166,7 @@ func TestParserService_createRequest(t *testing.T) {
 		{
 			name: "Request with multiple path and query vars",
 			config: model.Config{
-				ApiEndpoint: "https://api.example.com",
+				ApiEndpoint: "https://api.example.com/{userId}/{resourceId}",
 				Method:      "PUT",
 				PathVars:    []string{"userId", "resourceId"},
 				QueryVars:   []string{"status", "type"},
@@ -179,7 +179,7 @@ func TestParserService_createRequest(t *testing.T) {
 		{
 			name: "Request with headers",
 			config: model.Config{
-				ApiEndpoint: "https://api.example.com",
+				ApiEndpoint: "https://api.example.com/{id}",
 				Method:      "POST",
 				Headers: map[string]string{
 					"Content-Type":  "application/json",
@@ -431,7 +431,7 @@ func TestParserService_ReadAndParse(t *testing.T) {
 	}
 
 	config := model.Config{
-		ApiEndpoint:  "https://api.example.com",
+		ApiEndpoint:  "https://api.example.com/{userId}/{age}/{gender}",
 		Method:       "POST",
 		PathVars:     []string{"userId", "age", "gender"},
 		QueryVars:    []string{},

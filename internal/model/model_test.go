@@ -80,9 +80,10 @@ func TestConfig_GetPathVars(t *testing.T) {
 		{
 			name: "Single path variable",
 			config: Config{
-				PathVars:  []string{"userId"},
-				QueryVars: []string{},
-				HasBody:   false,
+				ApiEndpoint: "/{userId}",
+				PathVars:    []string{"userId"},
+				QueryVars:   []string{},
+				HasBody:     false,
 			},
 			row:           []string{"123"},
 			expected:      "/123",
@@ -91,12 +92,13 @@ func TestConfig_GetPathVars(t *testing.T) {
 		{
 			name: "Multiple path variables",
 			config: Config{
-				PathVars:  []string{"userId", "resourceId"},
-				QueryVars: []string{},
-				HasBody:   false,
+				ApiEndpoint: "/{userId}/test/{resourceId}",
+				PathVars:    []string{"userId", "resourceId"},
+				QueryVars:   []string{},
+				HasBody:     false,
 			},
 			row:           []string{"user123", "res456"},
-			expected:      "/user123/res456",
+			expected:      "/user123/test/res456",
 			expectedError: nil,
 		},
 		{
@@ -113,9 +115,10 @@ func TestConfig_GetPathVars(t *testing.T) {
 		{
 			name: "Path variables with quotes",
 			config: Config{
-				PathVars:  []string{"userId"},
-				QueryVars: []string{},
-				HasBody:   false,
+				ApiEndpoint: "/{userId}",
+				PathVars:    []string{"userId"},
+				QueryVars:   []string{},
+				HasBody:     false,
 			},
 			row:           []string{`"user123"`},
 			expected:      "/user123",
@@ -124,19 +127,20 @@ func TestConfig_GetPathVars(t *testing.T) {
 		{
 			name: "Path variables with mixed data",
 			config: Config{
-				PathVars:  []string{"userId", "age", "status"},
-				QueryVars: []string{"type"},
-				HasBody:   false,
+				ApiEndpoint: "/{userId}/first/{age}/second/{status}",
+				PathVars:    []string{"userId", "age", "status"},
+				QueryVars:   []string{"type"},
+				HasBody:     false,
 			},
 			row:           []string{"user1", "25", "active", "premium"},
-			expected:      "/user1/25/active",
+			expected:      "/user1/first/25/second/active",
 			expectedError: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := tt.config.GetPathVars(tt.row)
+			result, err := tt.config.WithPathVars(tt.row)
 			if !errors.Is(err, tt.expectedError) {
 				t.Errorf("Expected error %v, got %v", tt.expectedError, err)
 			}
@@ -525,9 +529,10 @@ func TestConfig_GetPathVars_EdgeCases(t *testing.T) {
 		{
 			name: "Special characters in path",
 			config: Config{
-				PathVars:  []string{"userId"},
-				QueryVars: []string{},
-				HasBody:   false,
+				ApiEndpoint: "/{userId}",
+				PathVars:    []string{"userId"},
+				QueryVars:   []string{},
+				HasBody:     false,
 			},
 			row:      []string{"user@123"},
 			expected: "/user@123",
@@ -536,7 +541,7 @@ func TestConfig_GetPathVars_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := tt.config.GetPathVars(tt.row)
+			result, err := tt.config.WithPathVars(tt.row)
 			if tt.expectedError != "" && err.Error() != tt.expectedError {
 				t.Errorf("Expected error: %v, got: %v", tt.expectedError, err)
 			}

@@ -108,27 +108,25 @@ func (conf *Config) GetTotalColumns() int {
 	return totalColumns
 }
 
-func (conf *Config) GetPathVars(row []string) (string, error) {
+func (conf *Config) WithPathVars(row []string) (string, error) {
+	urlRequest := conf.ApiEndpoint
 	if len(conf.PathVars) == 0 {
-		return "", nil
+		return urlRequest, nil
 	}
 	if len(row) < len(conf.PathVars) {
 		return "", fmt.Errorf("not enough columns in the csv")
 	}
-	var urlBuilder strings.Builder
 
 	columnsToProcess := min(len(conf.PathVars), conf.GetTotalColumns())
 
 	for j := 0; j < columnsToProcess; j++ {
-		urlBuilder.WriteString("/")
-		urlBuilder.WriteString(util.TrimQuotes(row[j]))
+		urlRequest = strings.Replace(urlRequest, "{"+conf.PathVars[j]+"}", util.TrimQuotes(row[j]), -1)
 	}
 
 	if len(conf.PathVars) > conf.GetTotalColumns() {
 		return "", fmt.Errorf("too many columns in the csv: %v", row)
 	}
-
-	return urlBuilder.String(), nil
+	return urlRequest, nil
 }
 
 func (conf *Config) GetQueryVars(row []string) (string, error) {

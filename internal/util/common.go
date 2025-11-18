@@ -30,9 +30,9 @@ func TrimQuotes(s string) string {
 }
 
 func DelayFor(sleep int) {
-	sleepTime := time.Duration(sleep) * time.Second
+	sleepTime := time.Duration(sleep) * time.Millisecond
 	time.Sleep(sleepTime)
-	println("Sleeping for " + sleepTime.String() + " second...")
+	println("Sleeping for " + sleepTime.String())
 }
 
 func WriteResponses(inputFilePath string, respList []string, suffix string) {

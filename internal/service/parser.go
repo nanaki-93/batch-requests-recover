@@ -75,8 +75,7 @@ func (s *ParserService) parse(content []byte) ([]http.Request, error) {
 }
 
 func (s *ParserService) createRequest(row []string) (*http.Request, error) {
-	reqUrl := s.config.ApiEndpoint
-	pathVars, err := s.config.GetPathVars(row)
+	reqUrl, err := s.config.WithPathVars(row)
 	if err != nil {
 		return nil, fmt.Errorf("error getting path vars: %w", err)
 	}
@@ -85,7 +84,7 @@ func (s *ParserService) createRequest(row []string) (*http.Request, error) {
 		return nil, fmt.Errorf("error getting query vars: %w", err)
 	}
 
-	reqUrl += pathVars + queryVars
+	reqUrl += queryVars
 
 	var body string
 	if s.config.HasBody {
