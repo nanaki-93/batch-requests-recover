@@ -28,8 +28,8 @@ func TestNewProcessService(t *testing.T) {
 		Method:      "POST",
 	}
 	args := model.CommandLineArgs{
-		DryRun:       true,
-		SleepSeconds: 0,
+		DryRun:      true,
+		SleepMillis: 0,
 	}
 
 	service := NewProcessService(config, args)
@@ -299,7 +299,7 @@ func TestProcessService_ProcessAll(t *testing.T) {
 
 			service := &ProcessService{
 				args: model.CommandLineArgs{
-					SleepSeconds: 0, // No sleep for tests
+					SleepMillis: 0, // No sleep for tests
 				},
 				httpService: mockService,
 			}
@@ -566,8 +566,8 @@ func TestProcessService_Integration(t *testing.T) {
 	}
 
 	args := model.CommandLineArgs{
-		DryRun:       false,
-		SleepSeconds: 0,
+		DryRun:      false,
+		SleepMillis: 0,
 	}
 
 	// Create mock responses

@@ -39,7 +39,7 @@ func (s *ProcessService) ProcessAll(records []http.Request) ([]string, []string,
 			errList = append(errList, responseMsg.Message)
 		}
 
-		util.DelayFor(s.args.SleepSeconds)
+		util.DelayFor(s.args.SleepMillis)
 	}
 	return respList, errList, nil
 }

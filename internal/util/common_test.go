@@ -150,7 +150,7 @@ func TestDelayFor(t *testing.T) {
 	}{
 		{
 			name:        "One second delay",
-			sleep:       1,
+			sleep:       1000,
 			minDuration: 1 * time.Second,
 			maxDuration: 1*time.Second + 100*time.Millisecond,
 		},

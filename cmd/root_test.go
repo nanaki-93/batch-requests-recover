@@ -206,8 +206,8 @@ func TestCheckAndParseArgs_AllDefaults(t *testing.T) {
 	if args.DryRun != true {
 		t.Errorf("DryRun = %v, want true", args.DryRun)
 	}
-	if args.SleepSeconds != 1 {
-		t.Errorf("SleepSeconds = %v, want 1", args.SleepSeconds)
+	if args.SleepMillis != 1000 {
+		t.Errorf("SleepMillis = %v, want 1000", args.SleepMillis)
 	}
 }
 
@@ -240,8 +240,8 @@ func TestCheckAndParseArgs_CustomValues(t *testing.T) {
 	if args.DryRun != false {
 		t.Errorf("DryRun = %v, want false", args.DryRun)
 	}
-	if args.SleepSeconds != 5 {
-		t.Errorf("SleepSeconds = %v, want 5", args.SleepSeconds)
+	if args.SleepMillis != 5 {
+		t.Errorf("SleepMillis = %v, want 5", args.SleepMillis)
 	}
 }
 
@@ -258,7 +258,7 @@ func TestCheckAndParseArgs_EdgeCases(t *testing.T) {
 				CSVFilePath:    "test.csv",
 				ConfigFilePath: "config.json",
 				DryRun:         true,
-				SleepSeconds:   0,
+				SleepMillis:    0,
 			},
 		},
 		{
@@ -268,7 +268,7 @@ func TestCheckAndParseArgs_EdgeCases(t *testing.T) {
 				CSVFilePath:    "test.csv",
 				ConfigFilePath: "config.json",
 				DryRun:         true,
-				SleepSeconds:   3600,
+				SleepMillis:    3600,
 			},
 		},
 		{
@@ -278,7 +278,7 @@ func TestCheckAndParseArgs_EdgeCases(t *testing.T) {
 				CSVFilePath:    "/absolute/path/to/file.csv",
 				ConfigFilePath: "config.json",
 				DryRun:         true,
-				SleepSeconds:   1,
+				SleepMillis:    1000,
 			},
 		},
 	}
@@ -312,8 +312,8 @@ func TestCheckAndParseArgs_EdgeCases(t *testing.T) {
 			if args.DryRun != tt.expected.DryRun {
 				t.Errorf("DryRun = %v, want %v", args.DryRun, tt.expected.DryRun)
 			}
-			if args.SleepSeconds != tt.expected.SleepSeconds {
-				t.Errorf("SleepSeconds = %v, want %v", args.SleepSeconds, tt.expected.SleepSeconds)
+			if args.SleepMillis != tt.expected.SleepMillis {
+				t.Errorf("SleepMillis = %v, want %v", args.SleepMillis, tt.expected.SleepMillis)
 			}
 		})
 	}

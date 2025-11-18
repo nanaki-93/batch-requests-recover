@@ -57,7 +57,7 @@ func checkAndParseArgs() *model.CommandLineArgs {
 		CSVFilePath:    *csvFilePath,
 		ConfigFilePath: *configFilePath,
 		DryRun:         *dryRun,
-		SleepSeconds:   *sleep,
+		SleepMillis:    *sleep,
 	}
 }
 

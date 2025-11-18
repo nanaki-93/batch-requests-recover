@@ -32,7 +32,7 @@ type CommandLineArgs struct {
 	CSVFilePath    string
 	ConfigFilePath string
 	DryRun         bool
-	SleepSeconds   int
+	SleepMillis    int
 }
 
 type CsvRequest struct {

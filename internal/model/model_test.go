@@ -557,7 +557,7 @@ func TestCommandLineArgs_Structure(t *testing.T) {
 		CSVFilePath:    "/path/to/file.csv",
 		ConfigFilePath: "/path/to/config.json",
 		DryRun:         true,
-		SleepSeconds:   5,
+		SleepMillis:    5,
 	}
 
 	if args.CSVFilePath != "/path/to/file.csv" {
@@ -569,8 +569,8 @@ func TestCommandLineArgs_Structure(t *testing.T) {
 	if !args.DryRun {
 		t.Error("DryRun should be true")
 	}
-	if args.SleepSeconds != 5 {
-		t.Error("SleepSeconds not set correctly")
+	if args.SleepMillis != 5 {
+		t.Error("SleepMillis not set correctly")
 	}
 }
 
